@@ -78,6 +78,8 @@ def generate_codes(node, prefix="", codes={}):
 delimeter = '|'
 
 def encode(text):
+    if not text:
+        return ''
     global delimeter
     tree = build_tree(text)
     codes = generate_codes(tree)
@@ -108,3 +110,4 @@ def decode(text):
             buffer = ''
 
     return decoded_text
+
