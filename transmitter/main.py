@@ -1,6 +1,6 @@
 from machine import Pin, Timer
 from huffman_coding import *
-from nrf import *
+from transmit import *
 import time
 import utime
 
