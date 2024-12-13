@@ -1,16 +1,20 @@
-from machine import Pin, Timer
+from machine import UART, Pin, Timer
 from huffman_coding import *
-from transmit import *
+
 import time
 import utime
 
 # Initialize pins
-trigger = Pin(3, Pin.OUT)
-echo = Pin(2, Pin.IN)
+trigger = Pin(17, Pin.OUT)
+echo = Pin(16, Pin.IN)
 led = Pin("LED", Pin.OUT)  # Onboard LED
-button = Pin(21, Pin.IN, Pin.PULL_DOWN)
-send_button = Pin(13, Pin.IN, Pin.PULL_DOWN)
+button = Pin(18, Pin.IN, Pin.PULL_DOWN)
+send_button = Pin(19, Pin.IN, Pin.PULL_DOWN)
 timer = Timer()
+
+# Initialize UART0 for communication
+uart = UART(0)  # UART0 uses GPIO 0 (TX) and GPIO 1 (RX) by default
+uart.init(baudrate=9600, bits=8, parity=None, stop=1)  # Configure UART parameters
 
 debounce_time = 300  # debounce time in milliseconds
 last_press = 0
@@ -93,10 +97,10 @@ def handle_button_press_send(pin):
         last_press_send = current_time  # Update the last press time
         print("Sending data...")
         encoded_message = encode(readings)
-        nrf.sendMessage(encoded_message)
         print("Sent Message")
         print(f"\tMessage = {readings}")
         print(f"\tEncoded = {encoded_message}")
+        uart.write(encoded_message + '\n') 
         readings = ''
         led.value(0)
 
@@ -114,4 +118,3 @@ if __name__ == '__main__':
 # chatGPT for readings loop
 # https://projects.raspberrypi.org/en/projects/introduction-to-the-pico/10    for button
 # https://www.tomshardware.com/how-to/raspberry-pi-pico-ultrasonic-sensor     for ultrasonic sensor code
-
