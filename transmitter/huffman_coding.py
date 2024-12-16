@@ -3,7 +3,7 @@ class PriorityQueue:
         self.queue = []
 
     def append(self, val):
-        if self.queue == []:
+        if not self.queue:
             self.queue.append(val)
             return
 
@@ -11,14 +11,11 @@ class PriorityQueue:
         r = len(self.queue)
 
         while l < r:
-            mid = int((l+r) / 2)
+            mid = (l+r) // 2
             if self.queue[mid].frequency < val.frequency:
                 l = mid + 1
-            elif self.queue[mid].frequency > val.frequency:
-                r = mid - 1
             else:
-                self.queue.insert(mid, val)
-                return
+                r=mid
         
         self.queue.insert(l, val)
 
@@ -27,7 +24,7 @@ class PriorityQueue:
             self.append(val)
 
     def pop(self):
-        return self.queue.pop()
+        return self.queue.pop(0)
     
     def getSize(self):
         return len(self.queue)
@@ -75,29 +72,60 @@ def generate_codes(node, prefix="", codes={}):
 
     return codes
 
+def compact(binary):
+    bits=10
+    compacted_text = ''
+    added_bits = bits - len(binary)%bits
+    binary = (added_bits * '0') + binary
+    
+    # Compacting bits into one char
+    for i in range(len(binary)//bits):
+        compacted_text += chr(int(binary[i*bits:(i+1)*bits],2))
+    compacted_text = str(added_bits) + compacted_text
+    
+    return compacted_text
+
+def decompact(text):
+    bits = 10
+    added_bits = text[0]
+    text = text[1:]
+    decompacted_text = ''
+    for char in text:
+        temp = bin(ord(char))[2:]
+        temp = temp.zfill(bits)
+        decompacted_text += temp
+        
+        
+    if added_bits:
+        decompacted_text = decompacted_text[int(added_bits):]
+    
+    return decompacted_text
+
 delimeter = '|'
 
 def encode(text):
+    global delimeter
     if not text:
         return ''
     global delimeter
     tree = build_tree(text)
     codes = generate_codes(tree)
     encoded_text = ''.join(codes[char] for char in text)
-
-    delimeter = '|'
-
-    return encoded_text + delimeter + ''.join(f'{val}:{code};' for val,code in codes.items())
+    compacted_text = compact(encoded_text)
+    for code in codes:
+        codes[code] = compact(codes[code])
+    return compacted_text + delimeter + ''.join(f'{val}:{code};' for val,code in codes.items())
 
 def decode(text):
     global delimeter
     encoded_text, codes = text.split(delimeter)
-
+    encoded_text = decompact(encoded_text)
+    
     codes_map = {}
 
     for code in codes.split(';'):
         if code:
-            codes_map[code.split(':')[1]] = code.split(':')[0]
+            codes_map[decompact(code.split(':')[1])] = code.split(':')[0]
 
     buffer = ''
     decoded_text = ''
@@ -108,5 +136,5 @@ def decode(text):
         if buffer in codes_map:
             decoded_text += codes_map[buffer]
             buffer = ''
-
+    
     return decoded_text
